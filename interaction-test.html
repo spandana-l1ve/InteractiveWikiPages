@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interaction Test Page</title>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#1b1f27; --muted:#5d6675; --line:#dfe3ea;
+  --accent:#2f7de1; --accent-ink:#ffffff; --good:#1f9d55; --good-bg:#e5f6ec; --bad:#c9372c; --bad-bg:#fdecea;
+  --warn:#b26a00; --soft:#eef2f7;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1115; --panel:#171a21; --ink:#e8eaf0; --muted:#9aa3b2; --line:#2a2f3a;
+    --accent:#5ec8ff; --accent-ink:#06121a; --good:#7ee2a8; --good-bg:#14261d; --bad:#ff8a80; --bad-bg:#2b1716;
+    --warn:#ffb454; --soft:#1d212a;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:26px;margin:0 0 4px}
+h2{font-size:16px;margin:0 0 10px}
+p{margin:0 0 10px;color:var(--muted)}
+.banner{border-radius:12px;padding:14px 16px;margin:16px 0;font-weight:600;border:1px solid}
+.banner.bad{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
+.banner.good{background:var(--good-bg);color:var(--good);border-color:var(--good)}
+.env{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-bottom:16px}
+.env div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px}
+.env b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.score{display:flex;align-items:center;gap:12px;margin:8px 0 18px}
+.score .meter{flex:1;height:10px;background:var(--soft);border-radius:99px;overflow:hidden}
+.score .meter i{display:block;height:100%;width:0;background:var(--good);transition:width .3s}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;position:relative}
+.card .tag{position:absolute;top:14px;right:14px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--muted)}
+.card.ok{border-color:var(--good)}
+.card.ok .tag{background:var(--good-bg);color:var(--good)}
+.card .hint{font-size:13px;color:var(--muted);margin-bottom:10px;padding-right:70px}
+button,select,input[type=text]{font:inherit;font-size:14px;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:7px 12px}
+button{cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button:focus-visible,select:focus-visible,input:focus-visible,canvas:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.big{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums}
+.bar{height:14px;border-radius:99px;background:var(--accent);transition:width .1s}
+.out{background:var(--soft);border-radius:8px;padding:8px 10px;min-height:38px;word-break:break-word;margin-top:8px;font-size:14px}
+.switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.switch input{appearance:none;width:44px;height:24px;border-radius:99px;background:var(--line);position:relative;cursor:pointer;transition:background .2s;margin:0}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}
+.switch input:checked{background:var(--good)}
+.switch input:checked::after{left:23px}
+.reveal{margin-top:10px;padding:10px;border-radius:8px;background:var(--good-bg);color:var(--good)}
+.shape{width:70px;height:70px;margin:8px auto 0;background:var(--accent);transition:all .3s}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:6px 10px}
+.tabs button[aria-selected=true]{border-bottom-color:var(--accent);color:var(--accent);font-weight:600}
+canvas{display:block;width:100%;border-radius:8px;background:var(--soft);touch-action:none;cursor:crosshair}
+svg{display:block;width:100%;max-width:240px;margin:0 auto;touch-action:none;user-select:none}
+.spin-js{width:48px;height:48px;border-radius:10px;background:var(--accent)}
+.spin-css{width:48px;height:48px;border-radius:10px;background:var(--warn);animation:spin 2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.key{display:inline-block;min-width:44px;padding:8px 12px;border:1px solid var(--line);border-bottom-width:3px;border-radius:8px;font-weight:700;text-align:center;background:var(--soft)}
+#log{font:12px/1.5 ui-monospace,Consolas,monospace;background:var(--soft);border-radius:8px;padding:10px;max-height:220px;overflow:auto;white-space:pre-wrap;margin:0}
+.foot{margin-top:20px;font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){.spin-css{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Interaction test page</h1>
+  <p>Use this page to check whether scripts and interactions work where you host it (directly, in an iframe, or pasted into Wiki.js). Each card turns green once you have tried it.</p>
+
+  <!-- This banner stays RED if JavaScript never runs. The script turns it green. -->
+  <div class="banner bad" id="jsBanner">✗ JavaScript is NOT running. Only HTML and CSS work here (the orange square in the animation card should still spin).</div>
+
+  <div class="env" id="env">
+    <div><b>Shown in</b><span id="envFrame">unknown</span></div>
+    <div><b>Page address</b><span id="envUrl">unknown</span></div>
+    <div><b>Browser storage</b><span id="envStorage">unknown</span></div>
+    <div><b>Cookies</b><span id="envCookies">unknown</span></div>
+  </div>
+
+  <div class="score">
+    <strong id="scoreTxt">0 of 0 tests tried</strong>
+    <div class="meter"><i id="scoreBar"></i></div>
+  </div>
+
+  <div class="grid">
+
+    <section class="card" data-test="click">
+      <span class="tag">not tried</span>
+      <h2>1 · Button clicks</h2>
+      <div class="hint">Click the buttons. The number should change.</div>
+      <div class="row"><button class="primary" id="incBtn">+1</button><button id="decBtn">−1</button><button id="resetBtn">Reset</button></div>
+      <div class="big" id="count">0</div>
+    </section>
+
+    <section class="card" data-test="slider">
+      <span class="tag">not tried</span>
+      <h2>2 · Slider</h2>
+      <div class="hint">Drag the slider. The bar width, colour and value should follow.</div>
+      <input type="range" id="slider" min="0" max="100" value="30" aria-label="Test slider">
+      <div class="bar" id="sliderBar" style="width:30%"></div>
+      <div class="out" id="sliderOut">Value: 30</div>
+    </section>
+
+    <section class="card" data-test="text">
+      <span class="tag">not tried</span>
+      <h2>3 · Text input</h2>
+      <div class="hint">Type something. It should appear below, reversed, with a character count.</div>
+      <input type="text" id="textIn" placeholder="Type here…" style="width:100%" aria-label="Test text input">
+      <div class="out" id="textOut">…</div>
+    </section>
+
+    <section class="card" data-test="toggle">
+      <span class="tag">not tried</span>
+      <h2>4 · Toggle switch</h2>
+      <div class="hint">Flip the switch to show and hide a hidden panel.</div>
+      <label class="switch"><input type="checkbox" id="toggle"> <span id="toggleTxt">Off</span></label>
+      <div class="reveal" id="reveal" hidden>Hidden panel revealed. Showing and hiding content works.</div>
+    </section>
+
+    <section class="card" data-test="select">
+      <span class="tag">not tried</span>
+      <h2>5 · Dropdown</h2>
+      <div class="hint">Pick a shape. The shape below should change.</div>
+      <select id="shapeSel" aria-label="Shape">
+        <option value="square">Square</option>
+        <option value="circle">Circle</option>
+        <option value="diamond">Diamond</option>
+        <option value="pill">Pill</option>
+      </select>
+      <div class="shape" id="shape"></div>
+    </section>
+
+    <section class="card" data-test="tabs">
+      <span class="tag">not tried</span>
+      <h2>6 · Tabs</h2>
+      <div class="hint">Switch tabs. The content should change.</div>
+      <div class="tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-tab="a">Overview</button>
+        <button role="tab" aria-selected="false" data-tab="b">Details</button>
+        <button role="tab" aria-selected="false" data-tab="c">Notes</button>
+      </div>
+      <div data-panel="a">This is the first tab.</div>
+      <div data-panel="b" hidden>Second tab: the content swapped without reloading.</div>
+      <div data-panel="c" hidden>Third tab: tabs work.</div>
+    </section>
+
+    <section class="card" data-test="draw">
+      <span class="tag">not tried</span>
+      <h2>7 · Canvas drawing</h2>
+      <div class="hint">Draw with the mouse, finger or pen. Tests canvas and pointer events.</div>
+      <canvas id="pad" width="600" height="260" aria-label="Drawing area"></canvas>
+      <div class="row" style="margin-top:8px"><button id="clearPad">Clear</button><span class="hint" style="margin:0;padding:0" id="padInfo">0 strokes</span></div>
+    </section>
+
+    <section class="card" data-test="drag">
+      <span class="tag">not tried</span>
+      <h2>8 · Drag in SVG</h2>
+      <div class="hint">Drag the blue dot around the ring. Its angle is shown live (like the head-rotation diagram).</div>
+      <svg id="ring" viewBox="0 0 200 200" aria-label="Drag the dot around the ring">
+        <circle cx="100" cy="100" r="70" fill="none" stroke="currentColor" stroke-opacity=".25" stroke-width="2"/>
+        <line id="ringLine" x1="100" y1="100" x2="100" y2="30" stroke="currentColor" stroke-opacity=".5" stroke-width="2"/>
+        <circle cx="100" cy="100" r="6" fill="currentColor" fill-opacity=".5"/>
+        <circle id="ringDot" cx="100" cy="30" r="12" fill="#2f7de1" style="cursor:grab"/>      </svg>
+      <div class="out" id="ringOut" style="text-align:center">Angle: 0°</div>
+    </section>
+
+    <section class="card" data-test="anim">
+      <span class="tag">not tried</span>
+      <h2>9 · Animation</h2>
+      <div class="hint">Blue square = JavaScript animation (Start / Stop). Orange square = CSS-only animation, which spins even without JavaScript.</div>
+      <div class="row" style="gap:24px;justify-content:center;margin:10px 0">
+        <div class="spin-js" id="spinJs"></div>
+        <div class="spin-css"></div>
+      </div>
+      <div class="row"><button class="primary" id="animBtn">Start</button><span class="hint" style="margin:0;padding:0" id="fps">— fps</span></div>
+    </section>
+
+    <section class="card" data-test="keys">
+      <span class="tag">not tried</span>
+      <h2>10 · Keyboard</h2>
+      <div class="hint">Click inside this box, then press any key.</div>
+      <div tabindex="0" id="keyBox" class="out" style="text-align:center;cursor:text" aria-label="Keyboard test area">
+        <span class="key" id="keyShow">?</span>
+        <div style="font-size:13px;margin-top:6px;color:var(--muted)" id="keyInfo">Click here first</div>
+      </div>
+    </section>
+
+    <section class="card" data-test="audio">
+      <span class="tag">not tried</span>
+      <h2>11 · Sound + stereo (headphones)</h2>
+      <div class="hint">Play a soft tone and pan it left / right. Tests Web Audio, as a binaural page would need.</div>
+      <div class="row"><button class="primary" id="audioBtn">Play tone</button><span class="hint" style="margin:0;padding:0" id="audioState">stopped</span></div>
+      <label class="hint" for="pan" style="display:block;margin-top:10px;padding:0">Pan: <span id="panVal">centre</span></label>
+      <input type="range" id="pan" min="-100" max="100" value="0" aria-label="Stereo pan">
+    </section>
+
+    <section class="card" data-test="storage">
+      <span class="tag">not tried</span>
+      <h2>12 · Remember a value</h2>
+      <div class="hint">Save a note, reload the page, and press Load. Tests browser storage (often blocked inside iframes).</div>
+      <input type="text" id="noteIn" placeholder="A note to remember" style="width:100%" aria-label="Note">
+      <div class="row" style="margin-top:8px"><button id="saveBtn">Save</button><button id="loadBtn">Load</button></div>
+      <div class="out" id="noteOut">Nothing saved yet.</div>
+    </section>
+
+    <section class="card" data-test="copy">
+      <span class="tag">not tried</span>
+      <h2>13 · Copy to clipboard</h2>
+      <div class="hint">Copies a line of text. Iframes often block this unless allowed.</div>
+      <button id="copyBtn">Copy test text</button>
+      <div class="out" id="copyOut">—</div>
+    </section>
+
+    <section class="card" data-test="timer">
+      <span class="tag">automatic</span>
+      <h2>14 · Live clock (timers)</h2>
+      <div class="hint">Updates every second by itself. If this ticks, timers run.</div>
+      <div class="big" id="clock">--:--:--</div>
+      <div class="hint" style="padding:0" id="uptime">running for 0 s</div>
+    </section>
+
+  </div>
+
+  <h2 style="margin-top:24px">Error log</h2>
+  <p>Any script errors on this page are listed here, so you do not need the browser console.</p>
+  <pre id="log">No errors so far.</pre>
+
+  <p class="foot">Self-contained: no external fonts, scripts or images. Last loaded: <span id="loadedAt">—</span></p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---------- Error log ----------
+  var logEl = $("log"), errors = 0;
+  function log(msg) {
+    errors++;
+    if (errors === 1) logEl.textContent = "";
+    logEl.textContent += "[" + new Date().toLocaleTimeString() + "] " + msg + "\n";
+  }
+  window.addEventListener("error", function (e) { log("Error: " + e.message + (e.lineno ? " (line " + e.lineno + ")" : "")); });
+  window.addEventListener("unhandledrejection", function (e) { log("Promise error: " + (e.reason && e.reason.message || e.reason)); });
+  function safe(name, fn) { try { fn(); } catch (err) { log(name + ": " + err.message); } }
+
+  // ---------- JS banner + environment ----------
+  var banner = $("jsBanner");
+  banner.className = "banner good";
+  banner.textContent = "✓ JavaScript is running.";
+
+  safe("environment", function () {
+    var framed;
+    try { framed = window.self !== window.top; } catch (e) { framed = true; }
+    $("envFrame").textContent = framed ? "inside an iframe" : "directly (not in an iframe)";
+    $("envUrl").textContent = location.protocol === "about:" ? "inline (srcdoc / about:)" : location.host + location.pathname;
+    var st = "blocked";
+    try { localStorage.setItem("__t", "1"); localStorage.removeItem("__t"); st = "available"; } catch (e) {}
+    $("envStorage").textContent = st;
+    $("envCookies").textContent = navigator.cookieEnabled ? "enabled" : "disabled";
+    $("loadedAt").textContent = new Date().toLocaleString();
+  });
+
+  // ---------- Pass tracking ----------
+  var cards = Array.prototype.slice.call(document.querySelectorAll("[data-test]"));
+  var passed = {};
+  function pass(name) {
+    if (passed[name]) return;
+    passed[name] = true;
+    var c = document.querySelector('[data-test="' + name + '"]');
+    if (c) { c.classList.add("ok"); c.querySelector(".tag").textContent = "✓ works"; }
+    updateScore();
+  }
+  function updateScore() {
+    var n = Object.keys(passed).length;
+    $("scoreTxt").textContent = n + " of " + cards.length + " tests working";
+    $("scoreBar").style.width = (100 * n / cards.length) + "%";
+  }
+  updateScore();
+
+  // 1 Click counter
+  safe("click", function () {
+    var n = 0, out = $("count");
+    function set(v) { n = v; out.textContent = n; pass("click"); }
+    $("incBtn").addEventListener("click", function () { set(n + 1); });
+    $("decBtn").addEventListener("click", function () { set(n - 1); });
+    $("resetBtn").addEventListener("click", function () { set(0); });
+  });
+
+  // 2 Slider
+  safe("slider", function () {
+    $("slider").addEventListener("input", function (e) {
+      var v = Number(e.target.value);
+      $("sliderBar").style.width = v + "%";
+      $("sliderBar").style.background = "hsl(" + (210 - v * 2.1) + ",70%,52%)";
+      $("sliderOut").textContent = "Value: " + v;
+      pass("slider");
+    });
+  });
+
+  // 3 Text
+  safe("text", function () {
+    $("textIn").addEventListener("input", function (e) {
+      var t = e.target.value;
+      $("textOut").textContent = t ? t.split("").reverse().join("") + "  (" + t.length + " characters)" : "…";
+      pass("text");
+    });
+  });
+
+  // 4 Toggle
+  safe("toggle", function () {
+    $("toggle").addEventListener("change", function (e) {
+      $("reveal").hidden = !e.target.checked;
+      $("toggleTxt").textContent = e.target.checked ? "On" : "Off";
+      pass("toggle");
+    });
+  });
+
+  // 5 Dropdown
+  safe("select", function () {
+    var styles = {
+      square: { borderRadius: "6px", transform: "none", width: "70px" },
+      circle: { borderRadius: "50%", transform: "none", width: "70px" },
+      diamond: { borderRadius: "6px", transform: "rotate(45deg) scale(.8)", width: "70px" },
+      pill: { borderRadius: "99px", transform: "none", width: "140px" }
+    };
+    $("shapeSel").addEventListener("change", function (e) {
+      var s = styles[e.target.value], el = $("shape");
+      Object.keys(s).forEach(function (k) { el.style[k] = s[k]; });
+      pass("select");
+    });
+  });
+
+  // 6 Tabs
+  safe("tabs", function () {
+    var tabs = document.querySelectorAll("[data-tab]");
+    Array.prototype.forEach.call(tabs, function (t) {
+      t.addEventListener("click", function () {
+        Array.prototype.forEach.call(tabs, function (x) { x.setAttribute("aria-selected", String(x === t)); });
+        Array.prototype.forEach.call(document.querySelectorAll("[data-panel]"), function (p) { p.hidden = p.dataset.panel !== t.dataset.tab; });
+        pass("tabs");
+      });
+    });
+  });
+
+  // 7 Canvas drawing
+  safe("draw", function () {
+    var cv = $("pad"), ctx = cv.getContext("2d"), drawing = false, strokes = 0, hue = 200;
+    function pos(e) { var r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; }
+    cv.addEventListener("pointerdown", function (e) {
+      drawing = true; cv.setPointerCapture(e.pointerId);
+      hue = (hue + 47) % 360;
+      var p = pos(e); ctx.beginPath(); ctx.moveTo(p[0], p[1]);
+    });
+    cv.addEventListener("pointermove", function (e) {
+      if (!drawing) return;
+      var p = pos(e);
+      ctx.lineTo(p[0], p[1]); ctx.strokeStyle = "hsl(" + hue + ",75%,55%)"; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.stroke();
+    });
+    function end() { if (!drawing) return; drawing = false; strokes++; $("padInfo").textContent = strokes + " stroke" + (strokes === 1 ? "" : "s"); pass("draw"); }
+    cv.addEventListener("pointerup", end);
+    cv.addEventListener("pointercancel", end);
+    $("clearPad").addEventListener("click", function () { ctx.clearRect(0, 0, cv.width, cv.height); strokes = 0; $("padInfo").textContent = "0 strokes"; });
+  });
+
+  // 8 SVG drag
+  safe("drag", function () {
+    var svg = $("ring"), dot = $("ringDot"), line = $("ringLine"), dragging = false;
+    function setFrom(e) {
+      var r = svg.getBoundingClientRect();
+      var x = (e.clientX - r.left) / r.width * 200 - 100, y = (e.clientY - r.top) / r.height * 200 - 100;
+      var a = Math.atan2(x, -y);
+      var deg = Math.round(a * 180 / Math.PI);
+      var px = 100 + 70 * Math.sin(a), py = 100 - 70 * Math.cos(a);
+      dot.setAttribute("cx", px.toFixed(1)); dot.setAttribute("cy", py.toFixed(1));
+      line.setAttribute("x2", px.toFixed(1)); line.setAttribute("y2", py.toFixed(1));
+      $("ringOut").textContent = "Angle: " + deg + "°";
+      pass("drag");
+    }
+    svg.addEventListener("pointerdown", function (e) { dragging = true; svg.setPointerCapture(e.pointerId); dot.style.cursor = "grabbing"; setFrom(e); });
+    svg.addEventListener("pointermove", function (e) { if (dragging) setFrom(e); });
+    function end() { dragging = false; dot.style.cursor = "grab"; }
+    svg.addEventListener("pointerup", end);
+    svg.addEventListener("pointercancel", end);
+  });
+
+  // 9 JS animation
+  safe("anim", function () {
+    var running = false, angle = 0, last = 0, frames = 0, fpsT = 0, el = $("spinJs");
+    function frame(t) {
+      if (!running) return;
+      if (last) angle += (t - last) * 0.18;
+      last = t;
+      el.style.transform = "rotate(" + angle + "deg)";
+      frames++;
+      if (t - fpsT > 500) { $("fps").textContent = Math.round(frames * 1000 / (t - fpsT)) + " fps"; frames = 0; fpsT = t; }
+      requestAnimationFrame(frame);
+    }
+    $("animBtn").addEventListener("click", function () {
+      running = !running;
+      this.textContent = running ? "Stop" : "Start";
+      if (running) { last = 0; fpsT = performance.now(); frames = 0; requestAnimationFrame(frame); pass("anim"); }
+      else $("fps").textContent = "stopped";
+    });
+  });
+
+  // 10 Keyboard
+  safe("keys", function () {
+    var box = $("keyBox");
+    box.addEventListener("click", function () { box.focus(); });
+    box.addEventListener("focus", function () { $("keyInfo").textContent = "Now press a key"; });
+    box.addEventListener("keydown", function (e) {
+      $("keyShow").textContent = e.key === " " ? "Space" : e.key;
+      $("keyInfo").textContent = "code: " + e.code + (e.shiftKey ? " + Shift" : "") + (e.ctrlKey ? " + Ctrl" : "");
+      if (e.key !== "Tab") e.preventDefault();
+      pass("keys");
+    });
+  });
+
+  // 11 Web Audio with stereo pan
+  safe("audio", function () {
+    var ac = null, osc = null, gain = null, panner = null;
+    function panLabel(v) { return v === 0 ? "centre" : (v < 0 ? Math.abs(v) + "% left" : v + "% right"); }
+    $("audioBtn").addEventListener("click", function () {
+      var btn = this;
+      try {
+        if (osc) {
+          gain.gain.setTargetAtTime(0, ac.currentTime, 0.05);
+          var o = osc; osc = null;
+          setTimeout(function () { try { o.stop(); } catch (e) {} }, 200);
+          btn.textContent = "Play tone"; $("audioState").textContent = "stopped";
+          return;
+        }
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) { $("audioState").textContent = "Web Audio not supported"; return; }
+        ac = ac || new AC();
+        if (ac.state === "suspended") ac.resume();
+        osc = ac.createOscillator(); gain = ac.createGain();
+        panner = ac.createStereoPanner ? ac.createStereoPanner() : null;
+        osc.type = "sine"; osc.frequency.value = 440;
+        gain.gain.value = 0; gain.gain.setTargetAtTime(0.08, ac.currentTime, 0.05);
+        osc.connect(gain);
+        if (panner) { panner.pan.value = Number($("pan").value) / 100; gain.connect(panner); panner.connect(ac.destination); }
+        else gain.connect(ac.destination);
+        osc.start();
+        btn.textContent = "Stop tone"; $("audioState").textContent = "playing 440 Hz" + (panner ? "" : " (no stereo panner)");
+        pass("audio");
+      } catch (err) { log("audio: " + err.message); $("audioState").textContent = "blocked: " + err.message; }
+    });
+    $("pan").addEventListener("input", function (e) {
+      var v = Number(e.target.value);
+      $("panVal").textContent = panLabel(v);
+      if (panner && ac) panner.pan.setTargetAtTime(v / 100, ac.currentTime, 0.02);
+    });
+  });
+
+  // 12 Storage
+  safe("storage", function () {
+    var KEY = "interaction-test-note";
+    $("saveBtn").addEventListener("click", function () {
+      try { localStorage.setItem(KEY, $("noteIn").value); $("noteOut").textContent = "Saved. Reload the page and press Load."; pass("storage"); }
+      catch (e) { $("noteOut").textContent = "Storage is blocked here (" + e.name + "). Pages that remember settings will not work in this spot."; }
+    });
+    $("loadBtn").addEventListener("click", function () {
+      try {
+        var v = localStorage.getItem(KEY);
+        $("noteOut").textContent = v === null ? "Nothing saved yet." : "Loaded: " + v;
+        if (v !== null) pass("storage");
+      } catch (e) { $("noteOut").textContent = "Storage is blocked here (" + e.name + ")."; }
+    });
+  });
+
+  // 13 Clipboard
+  safe("copy", function () {
+    $("copyBtn").addEventListener("click", function () {
+      var text = "Copied from the interaction test page at " + new Date().toLocaleTimeString();
+      function fallback() {
+        var ta = document.createElement("textarea");
+        ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        var ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+        document.body.removeChild(ta);
+        $("copyOut").textContent = ok ? "Copied (fallback method). Paste somewhere to check." : "Copy blocked here.";
+        if (ok) pass("copy");
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          $("copyOut").textContent = "Copied. Paste somewhere to check."; pass("copy");
+        }, fallback);
+      } else fallback();
+    });
+  });
+
+  // 14 Timer
+  safe("timer", function () {
+    var start = Date.now(), ticks = 0;
+    function tick() {
+      $("clock").textContent = new Date().toLocaleTimeString();
+      $("uptime").textContent = "running for " + Math.round((Date.now() - start) / 1000) + " s";
+      if (++ticks >= 2) pass("timer");
+    }
+    tick(); setInterval(tick, 1000);
+  });
+})();
+</script>
+</body>
+</html>
